@@ -1,7 +1,5 @@
 #include <Arduino.h>
 #include <CapacitiveSensor.h>
-#include <MIDIUSB_Defs.h>
-#include <MIDIUSB.h>
 #include <note.cpp>
 
 CapacitiveSensor sensor = CapacitiveSensor(8, 9);
@@ -15,11 +13,11 @@ void setup()
 {
   Serial.begin(115200);
   //setup multiplexer output pins
-  for (size_t i = 2; i <= 5; i++)
+  for (size_t i = 2; i <= 6; i++)
   {
     pinMode(i, OUTPUT);
   }
-  setupNotes(5);
+  setupNotes(4);
 }
 
 uint8_t channel = 0;
@@ -33,10 +31,10 @@ void loop()
   for (channel = 0; channel < NOTE_COUNT; channel++)
   {
     SelectChannel(channel);
-    input = sensor.capacitiveSensor(10);
-    if (input > 65)
+    input = sensor.capacitiveSensor(3);
+    if (input > 40)
     {
-      notes[channel].noteOn(0, constrain(input - 35, 0, 255));
+      notes[channel].noteOn(0, constrain(input - 40, 0, 255));
       //track greatest velocity
       if (notes[channel].velocityVal > greatestVel)
       {
@@ -65,6 +63,7 @@ void SelectChannel(uint8_t &channel)
   digitalWrite(3, bitRead(channel, 2));
   digitalWrite(4, bitRead(channel, 1));
   digitalWrite(5, bitRead(channel, 0));
+  digitalWrite(6, bitRead(channel, 4));
 }
 
 void setupNotes(int octave)

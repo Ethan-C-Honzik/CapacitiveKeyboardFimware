@@ -20,7 +20,7 @@ public:
     {
         OnCycles++;
         velocityVal = velocity;
-        if (!noteActive && OnCycles > (uint8_t)3)
+        if (!noteActive && OnCycles > (uint8_t)2)
         {
             noteActive = true;
             midiEventPacket_t noteOn = {0x09, 0x90 | channel, note, velocity};
