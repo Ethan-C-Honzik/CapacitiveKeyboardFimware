@@ -10,14 +10,32 @@ public:
     uint8_t note = 0;
     bool noteActive = false;
 
-    //the live velocity value. will be different from inital note on.
+    const uint16_t CALIBRATION_STEPS = 1000;
+    uint16_t calibrationSamples = 0;
+    long baseVal = 0;
+
+    // the live velocity value. will be different from inital note on.
     uint8_t velocityVal = 0;
 
-    //used to track how many cycles the note has been on for.
+    // used to track how many cycles the note has been on for.
     uint8_t OnCycles = 0;
+
+    void calibrate(int input)
+    {
+        if (calibrationSamples < CALIBRATION_STEPS)
+        {
+            baseVal += input;
+            calibrationSamples += 1;
+        }else if(calibrationSamples == CALIBRATION_STEPS){
+            baseVal = (int16_t)((baseVal / CALIBRATION_STEPS) * 1.35);
+            calibrationSamples += 1;
+        }
+    }
 
     void noteOn(uint8_t channel, uint8_t velocity)
     {
+        if (calibrationSamples < CALIBRATION_STEPS)
+            return;
         OnCycles++;
         velocityVal = velocity;
         if (!noteActive && OnCycles > (uint8_t)2)

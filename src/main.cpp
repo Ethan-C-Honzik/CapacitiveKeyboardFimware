@@ -13,6 +13,8 @@ Note notes[NOTE_COUNT];
 void setup()
 {
   Serial.begin(115200);
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, 0);
   // setup multiplexer output pins
   for (size_t i = 2; i <= 5; i++)
   {
@@ -23,30 +25,34 @@ void setup()
 
 // a control change of the greatest velocity is sent.
 int16_t greatestVel = 0;
-int input;
+long input;
 
-void noteLogic(int input, int channel)
+void noteLogic(int input, Note &note)
 {
-  if (input > 45)
+  if (input > note.baseVal)
   {
-    notes[channel].noteOn(0, constrain((input - 40) * 2, 0, 255));
+    note.noteOn(0, constrain((input - note.baseVal) * 6, 0, 255));
     // track greatest velocity
-    if (notes[channel].velocityVal > greatestVel)
+    if (note.velocityVal > greatestVel)
     {
-      greatestVel = notes[channel].velocityVal;
+      greatestVel = note.velocityVal;
     }
   }
   else
   {
-    notes[channel].noteOff(0, 0);
+    note.noteOff(0, 0);
   }
-
+  Serial.print(note.baseVal);
+  Serial.print(" ");
   Serial.print(input);
   Serial.print(" ");
 }
 
 void loop()
 {
+  if(notes[0].calibrationSamples > notes[0].CALIBRATION_STEPS){
+    digitalWrite(LED_BUILTIN, 1);
+  }
   greatestVel = -1;
   for (uint8_t channel = 0; channel < 16; channel++)
   {
@@ -55,11 +61,13 @@ void loop()
     {
       input = sensorLow.capacitiveSensor(2);
       // we have an offset of zero because these are the lower notes
-      noteLogic(input, channel + 16);
+      notes[channel + 16].calibrate(input);
+      noteLogic(input, notes[channel + 16]);
     }
     input = sensorHigh.capacitiveSensor(2);
+    notes[channel].calibrate(input);
     // we have an offset of 8 because these notes are 8 higher than the start
-    noteLogic(input, channel);
+    noteLogic(input, notes[channel]);
   }
   if (greatestVel > 0)
   {
